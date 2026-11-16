@@ -1,4 +1,4 @@
-const CACHE = 'catatan-uang-v1';
+const CACHE = 'catatan-uang-v2';
 const ASET = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
