@@ -1,4 +1,4 @@
-const CACHE = 'catatan-uang-v2';
+const CACHE = 'putri-finance-v2';
 const ASET = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -17,8 +17,6 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Tampilkan dari cache dulu, lalu perbarui cache dari jaringan di belakang layar.
-// Permintaan ke server (POST) tidak disentuh di sini.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
