@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f9a8d4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Putri Finance">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-pastel-192.png">
+<link rel="apple-touch-icon" href="icon-pastel-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Putri Finance 🌸</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="progress" class="progress"></div>
+
+<!-- First-time setup -->
+<section id="setupScreen" class="screen hidden">
+  <div class="card setup-card">
+    <div class="logo">🌸</div>
+    <h2 class="center" style="font-size:24px;margin-top:6px">Welcome, Princess 👑!</h2>
+    <p class="muted small center" style="margin-top:6px">Connect the app to your spreadsheet. You only need to do this once ✨</p>
+    <form id="setupForm">
+      <label for="setupUrl">🔗 Web App URL</label>
+      <input id="setupUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" required>
+      <label for="setupKey">🔑 Secret key</label>
+      <input id="setupKey" type="password" placeholder="Paste from Script Properties" required autocomplete="off">
+      <label for="setupPin">🎀 Create a 6-digit PIN</label>
+      <input id="setupPin" type="password" inputmode="numeric" maxlength="6" required autocomplete="new-password">
+      <label for="setupPin2">🎀 Repeat PIN</label>
+      <input id="setupPin2" type="password" inputmode="numeric" maxlength="6" required autocomplete="new-password">
+      <button class="btn" type="submit" id="btnSetup" style="margin-top:20px">Connect 💖</button>
+    </form>
+  </div>
+</section>
+
+<!-- PIN lock -->
+<section id="lockScreen" class="screen hidden">
+  <div class="logo">🔐</div>
+  <h2 style="font-size:24px;margin-top:6px">Enter your PIN 🎀</h2>
+  <div class="dots" id="dots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+  <div class="keypad" id="keypad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <span></span><button data-k="0">0</button><button data-k="del">⌫</button>
+  </div>
+  <button class="muted small" id="forgotPin" style="margin-top:24px;text-decoration:underline">Forgot PIN? Reset app</button>
+</section>
+
+<!-- Main app -->
+<main id="app" class="hidden">
+  <header class="topbar">
+    <div>
+      <div class="brand">🌸 Putri Finance</div>
+      <div id="status" class="status">Loading…</div>
+    </div>
+    <div class="top-actions">
+      <button id="btnLock" class="icon-btn" aria-label="Lock">🔒</button>
+      <button id="btnReset" class="icon-btn" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Home -->
+  <section id="tabHome" class="tab">
+    <div class="card hidden" id="billAlert"></div>
+    <div class="greet" id="greet">Hi, Princess ✨</div>
+    <div class="sub" id="todayLabel"></div>
+    <div class="chips">
+      <button class="chip" data-period="today">Today</button>
+      <button class="chip" data-period="week">This week</button>
+      <button class="chip active" data-period="month">This month</button>
+      <button class="chip" data-period="custom">Custom</button>
+    </div>
+    <div class="custom-range hidden" data-custom>
+      <input type="date" class="kInput" data-k="from" aria-label="From date">
+      <input type="date" class="kInput" data-k="to" aria-label="To date">
+    </div>
+    <div class="balance-card">
+      <div class="lbl" id="labelPeriod">This month</div>
+      <div class="big" id="netAmount">Rp 0</div>
+      <span class="pill" id="compareBadge">🌷 Not enough data to compare yet</span>
+    </div>
+    <div class="tiles">
+      <div class="tile in"><div class="ico">💰</div><small>Income</small><b id="sumIncome">Rp 0</b></div>
+      <div class="tile out"><div class="ico">🛍️</div><small>Expenses</small><b id="sumExpense">Rp 0</b></div>
+    </div>
+    <div class="mini-row">
+      <div class="mini"><small>Savings rate</small><b id="statSavings">–</b></div>
+      <div class="mini"><small>Avg expense</small><b id="statAvg">Rp 0</b></div>
+      <div class="mini"><small>Entries</small><b id="statCount">0</b></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🍩 Where your money goes</div>
+      <div class="donut-wrap">
+        <canvas id="chartDonut"></canvas>
+        <div class="donut-center"><div><small>Total spent</small><b id="donutTotal">Rp 0</b></div></div>
+      </div>
+      <div id="catList" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✨ Insights</div>
+      <div id="insights"></div>
+    </div>
+    <div class="card-title plain">🧾 Latest entries</div>
+    <div id="latest"></div>
+  </section>
+
+  <!-- History -->
+  <section id="tabHistory" class="tab hidden">
+    <div class="card-title plain">📜 History</div>
+    <input id="search" type="search" placeholder="🔍 Search category, note, #tag, or amount">
+    <div class="filter-grid">
+      <select id="filterType" aria-label="Type">
+        <option value="">All types</option>
+        <option value="INCOME">💰 Income</option>
+        <option value="EXPENSE">🛍️ Expense</option>
+      </select>
+      <select id="filterCategory" aria-label="Category"></select>
+    </div>
+    <div class="filter-grid">
+      <input type="date" id="filterFrom" aria-label="From date">
+      <input type="date" id="filterTo" aria-label="To date">
+    </div>
+    <div class="row-btns">
+      <button class="btn sm ghost" id="btnCsv">⬇️ Download CSV</button>
+      <button class="btn sm ghost" id="btnPdf">🖨️ Save as PDF</button>
+      <button class="muted small" id="resetFilter" style="text-decoration:underline;margin-left:auto">Reset filters</button>
+    </div>
+    <div id="historyList" style="margin-top:12px"></div>
+  </section>
+
+  <!-- Analytics -->
+  <section id="tabAnalytics" class="tab hidden">
+    <div class="card-title plain">📊 Analytics</div>
+    <div class="chips">
+      <button class="chip" data-period="today">Today</button>
+      <button class="chip" data-period="week">This week</button>
+      <button class="chip active" data-period="month">This month</button>
+      <button class="chip" data-period="custom">Custom</button>
+    </div>
+    <div class="chips">
+      <button class="chip active" data-mode="daily">📅 Daily</button>
+      <button class="chip" data-mode="weekday">🗓️ By weekday</button>
+      <button class="chip" data-mode="six">📆 6 months</button>
+    </div>
+    <div class="card">
+      <div class="card-title" id="chartTitle">Daily trend</div>
+      <div class="chart-box"><canvas id="chartMain"></canvas></div>
+      <div class="mini-row two" style="margin:14px 0 0">
+        <div class="mini"><small id="statALabel">Average per day</small><b id="statA">Rp 0</b></div>
+        <div class="mini"><small id="statBLabel">Peak day</small><b id="statB">–</b></div>
+      </div>
+      <div class="row-btns"><button class="btn sm ghost" id="btnShare">📤 Share monthly report</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔥 Top 5 expenses</div>
+      <div id="topList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Categories vs previous period</div>
+      <div id="catTable"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏷️ Tags</div>
+      <div id="tagList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 Monthly budgets</div>
+      <div class="budget-form">
+        <select id="budCat" aria-label="Category"></select>
+        <input id="budAmt" inputmode="numeric" placeholder="Limit, e.g. 500.000">
+        <button class="btn sm" id="budAdd" type="button">Add</button>
+      </div>
+      <div id="budList"></div>
+      <p class="note">Budgets use this month's spending, whatever period is selected above. Orange means 80% used, red means over budget.</p>
+    </div>
+  </section>
+
+  <!-- Money -->
+  <section id="tabMoney" class="tab hidden">
+    <div class="card-title plain">💼 Money</div>
+    <div class="chips">
+      <button class="chip active" data-money="wallets">👛 Wallets</button>
+      <button class="chip" data-money="trading">📈 Trading</button>
+      <button class="chip" data-money="plan">🎯 Plan</button>
+      <button class="chip" data-money="wealth">👑 Wealth</button>
+    </div>
+
+    <div id="money-wallets">
+      <div class="balance-card">
+        <div class="lbl">Estimated total</div>
+        <div class="big" id="totalWallets">Rp 0</div>
+        <span class="pill" id="walletSplit">👛 Wallets Rp 0 · 💼 Securities Rp 0</span>
+      </div>
+      <p class="muted small" id="walletNote" style="margin:0 6px 14px"></p>
+      <div class="card"><div class="card-title">👛 Wallets</div><div id="listWallets"></div></div>
+      <div class="card"><div class="card-title">💼 Securities (RDN)</div><div id="listSecurities"></div></div>
+    </div>
+
+    <div id="money-trading" class="hidden"><div id="tradingBox"></div></div>
+
+    <div id="money-plan" class="hidden">
+      <div class="card">
+        <div class="card-title">🎯 Savings goals</div>
+        <div id="goalList"></div>
+        <div class="row-btns"><button class="btn sm ghost" id="btnNewGoal">+ New goal</button></div>
+        <p class="note">Goal savings are tracked separately. They do not reduce your wallet balances.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">🧾 Bills</div>
+        <div id="billList"></div>
+        <div class="row-btns"><button class="btn sm ghost" id="btnNewBill">+ New bill</button></div>
+        <p class="note">Tap "Pay now" to record a bill as an expense in History. Bills due within 3 days show on Home.</p>
+      </div>
+    </div>
+
+    <div id="money-wealth" class="hidden">
+      <div class="card">
+        <div class="card-title">👑 Cash over time</div>
+        <div id="wealthEmpty" class="empty hidden"></div>
+        <div id="wealthBody">
+          <div class="balance-card" style="margin-bottom:12px">
+            <div class="lbl">Cash balance now</div>
+            <div class="big" id="wealthNow">Rp 0</div>
+            <span class="pill" id="wealthDiff"></span>
+          </div>
+          <div class="chart-box"><canvas id="chartWealth"></canvas></div>
+          <p class="note">Based on your wallet balances and transactions. Stock value is not included, only cash.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="bottom-nav">
+    <button data-tab="tabHome" class="active"><span>🏠</span><span>Home</span></button>
+    <button data-tab="tabHistory"><span>📜</span><span>History</span></button>
+    <span></span>
+    <button data-tab="tabAnalytics"><span>📊</span><span>Analytics</span></button>
+    <button data-tab="tabMoney"><span>💼</span><span>Money</span></button>
+  </nav>
+  <button class="fab" id="btnAdd" aria-label="Add entry">+</button>
+</main>
+
+<div id="overlay" class="overlay hidden"></div>
+
+<!-- Add / edit entry -->
+<form id="txSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="txTitle">✨ Add entry</h3>
+    <button type="button" id="txClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <div class="seg" id="txSeg">
+    <button type="button" data-type="EXPENSE" class="active">🛍️ Expense</button>
+    <button type="button" data-type="INCOME">💰 Income</button>
+  </div>
+  <label for="txAmount">Amount</label>
+  <div class="amount-wrap"><span>Rp</span><input id="txAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <label for="txCategory">Category</label>
+  <select id="txCategory"></select>
+  <div class="two-col">
+    <div><label for="txDate">Date</label><input id="txDate" type="date"></div>
+    <div><label for="txWallet">Wallet</label><select id="txWallet"></select></div>
+  </div>
+  <label for="txNote">Note (optional)</label>
+  <input id="txNote" placeholder="e.g. lunch #office" maxlength="120" autocomplete="off">
+  <p class="note">Tip: add #tags in the note, like #holiday or #office, to see totals per tag.</p>
+  <button class="btn" id="txSave" type="submit" style="margin-top:16px">Save 💖</button>
+  <button class="btn ghost" id="txDelete" type="button" style="margin-top:10px">Delete entry</button>
+</form>
+
+<!-- Set wallet balance -->
+<form id="balSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3>👛 Set balance</h3>
+    <button type="button" id="balClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="balAccount">Account</label>
+  <select id="balAccount"></select>
+  <label for="balAmount">Current balance (rounding is fine)</label>
+  <div class="amount-wrap"><span>Rp</span><input id="balAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <label for="balDate">As of</label>
+  <input id="balDate" type="date">
+  <p class="muted small" style="margin-top:10px">Transactions after this date will automatically add to or subtract from the balance.</p>
+  <button class="btn" id="balSave" type="submit" style="margin-top:18px">Save balance ✨</button>
+</form>
+
+<!-- Savings goal -->
+<form id="goalSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="goalTitle">🎯 New goal</h3>
+    <button type="button" id="goalClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="goalEmoji">Icon</label>
+  <select id="goalEmoji"></select>
+  <label for="goalName">Goal name</label>
+  <input id="goalName" placeholder="e.g. New laptop" maxlength="40" autocomplete="off">
+  <label for="goalTarget">Target amount</label>
+  <div class="amount-wrap"><span>Rp</span><input id="goalTarget" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <label for="goalDeadline">Deadline (optional)</label>
+  <input id="goalDeadline" type="date">
+  <button class="btn" id="goalSave" type="submit" style="margin-top:18px">Save goal ✨</button>
+  <button class="btn ghost hidden" id="goalDelete" type="button" style="margin-top:10px">Delete goal</button>
+</form>
+
+<!-- Add savings to a goal -->
+<form id="fundSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="fundTitle">+ Savings</h3>
+    <button type="button" id="fundClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="fundAmount">Amount to add</label>
+  <div class="amount-wrap"><span>Rp</span><input id="fundAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <button class="btn" id="fundSave" type="submit" style="margin-top:18px">Add savings 💖</button>
+</form>
+
+<!-- Bill -->
+<form id="billSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="billTitle">🧾 New bill</h3>
+    <button type="button" id="billClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="billName">Bill name</label>
+  <input id="billName" placeholder="e.g. Electricity" maxlength="40" autocomplete="off">
+  <label for="billAmount">Amount</label>
+  <div class="amount-wrap"><span>Rp</span><input id="billAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <div class="two-col">
+    <div><label for="billDay">Due day</label><select id="billDay"></select></div>
+    <div><label for="billWallet">Wallet</label><select id="billWallet"></select></div>
+  </div>
+  <label for="billCategory">Category</label>
+  <select id="billCategory"></select>
+  <button class="btn" id="billSave" type="submit" style="margin-top:18px">Save bill 🧾</button>
+  <button class="btn ghost hidden" id="billDelete" type="button" style="margin-top:10px">Delete bill</button>
+</form>
+
+<!-- Confirm -->
+<div id="modal" class="modal hidden">
+  <div class="box">
+    <div class="ico">🫧</div>
+    <h3 id="modalTitle" style="margin-top:6px">Are you sure?</h3>
+    <p class="muted" id="modalText" style="margin:8px 0 18px"></p>
+    <div class="two-col" style="margin-top:0">
+      <button class="btn ghost" id="modalNo">Cancel</button>
+      <button class="btn danger" id="modalYes">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="printArea"></div>
+
+<script src="app-data.js"></script>
+<script src="app-ui.js"></script>
+<script src="app-forms.js"></script>
+<script src="app-events.js"></script>
+</body>
+</html>
