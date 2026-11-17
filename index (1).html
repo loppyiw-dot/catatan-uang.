@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f9a8d4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Putri Finance">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-pastel-192.png">
+<link rel="apple-touch-icon" href="icon-pastel-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Putri Finance 🌸</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+:root{--plum:#5b4a6e;--muted:#9b8fab;--line:#f3e6f0;--pink-d:#f06fa0;--mint-d:#2fa37c;--grad:linear-gradient(135deg,#f9a8d4 0%,#c4b5fd 100%);--grad-main:linear-gradient(135deg,#ffc2dc 0%,#dccbff 55%,#bfe9ff 100%);--shadow:0 12px 30px rgba(244,143,177,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Quicksand',system-ui,-apple-system,sans-serif;font-weight:500;color:var(--plum);background:#fff8fc;min-height:100vh;padding-bottom:calc(120px + env(safe-area-inset-bottom));overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(700px 500px at -10% -5%,#ffe0ef,transparent 60%),radial-gradient(600px 500px at 110% 10%,#e9ddff,transparent 55%),radial-gradient(500px 400px at 50% 110%,#d8f4ff,transparent 60%)}
+.hidden{display:none!important}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+input,select{font:inherit;width:100%;padding:13px 15px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--plum);outline:none;font-weight:600;min-width:0}
+input:focus,select:focus{border-color:var(--pink-d);box-shadow:0 0 0 4px rgba(240,111,160,.15)}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:700}
+.muted{color:var(--muted)}.small{font-size:12px}.center{text-align:center}
+.card{background:rgba(255,255,255,.88);border:2px solid #fff;border-radius:28px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.plain{margin:8px 4px 10px}
+.btn{width:100%;padding:15px;border-radius:999px;background:var(--grad);color:#fff;font-weight:700;font-size:16px;box-shadow:0 10px 22px rgba(196,181,253,.55);transition:transform .15s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.6}
+.btn.sm{width:auto;padding:10px 16px;font-size:13px;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--plum);border:2px solid var(--line);box-shadow:none}
+.btn.danger{background:linear-gradient(135deg,#ffb3c7,#f06fa0)}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.icon-btn{width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 6px 14px rgba(244,143,177,.2);font-size:18px;display:grid;place-items:center;transition:transform .2s}
+.icon-btn:active{transform:rotate(20deg) scale(.95)}
+.screen{position:fixed;inset:0;z-index:50;background:#fff8fc;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.logo{font-size:60px;text-align:center;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.setup-card{width:100%;max-width:380px}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.dots{display:flex;margin:22px 0 4px}
+.dot{width:18px;height:18px;border-radius:50%;border:3px solid #f0cfe0;margin:0 9px;transition:.25s}
+.dot.on{background:var(--grad);border-color:transparent;transform:scale(1.1)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:300px;margin-top:26px}
+.keypad button{aspect-ratio:1/1;border-radius:50%;background:#fff;box-shadow:0 8px 18px rgba(244,143,177,.2);font-size:24px;font-weight:700}
+.keypad button:active{transform:scale(.92);background:#ffeef6}
+#app{padding:0 16px}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 20px 12px;margin:0 -16px 6px;background:rgba(255,248,252,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.brand{font-size:20px;font-weight:700}
+.status{font-size:12px;color:var(--muted);margin-top:2px}
+.top-actions{display:flex;gap:8px}
+.greet{font-size:22px;font-weight:700;margin:6px 4px 2px}
+.sub{color:var(--muted);font-size:14px;margin:0 4px 12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:9px 16px;border-radius:999px;background:#fff;border:2px solid var(--line);color:var(--muted);font-size:14px;font-weight:700;white-space:nowrap}
+.chip.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(196,181,253,.5)}
+.custom-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 12px}
+.tab{animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.balance-card{border-radius:32px;padding:22px;background:var(--grad-main);box-shadow:0 16px 36px rgba(169,139,240,.3);position:relative;overflow:hidden;margin-bottom:14px}
+.balance-card::after{content:"✨";position:absolute;right:18px;top:14px;font-size:30px;animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.18);opacity:1}}
+.lbl{font-size:14px;font-weight:700;opacity:.9}
+.big{font-size:36px;font-weight:700;margin:4px 0 10px}
+.big.neg{color:#b4285c}
+.pill{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.75);font-size:12px;font-weight:700}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.tile{border-radius:26px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.04)}
+.tile.in{background:#c9f5e4}.tile.out{background:#ffdcc7}
+.tile .ico{font-size:26px}
+.tile small{display:block;font-weight:700;opacity:.8;margin-top:6px;font-size:13px}
+.tile b{display:block;font-size:17px;margin-top:2px}
+.mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mini-row.two{grid-template-columns:1fr 1fr}
+.mini{background:#fff;border-radius:20px;padding:12px;text-align:center;box-shadow:0 6px 14px rgba(0,0,0,.03)}
+.mini small{display:block;color:var(--muted);font-size:11px;font-weight:700}
+.mini b{font-size:15px}
+.donut-wrap{position:relative;height:210px}
+.donut-center{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none}
+.donut-center small{display:block;color:var(--muted);font-weight:700;font-size:12px}
+.donut-center b{font-size:17px}
+.cat-row{padding:9px 8px;border-radius:18px;cursor:pointer}
+.cat-row:active{background:#fff3f9}
+.bar-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.bar-top span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{height:10px;border-radius:999px;background:#f7eef6;margin-top:8px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:999px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.fill.warn{background:linear-gradient(90deg,#fde68a,#fdba74)!important}
+.fill.over{background:linear-gradient(90deg,#fda4af,#f43f5e)!important}
+.insight{display:flex;gap:12px;align-items:center;background:#fff;border-radius:22px;padding:12px 14px;margin-bottom:10px;box-shadow:0 6px 14px rgba(0,0,0,.03)}
+.insight:last-child{margin-bottom:0}
+.ico-box{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-size:22px;flex:0 0 auto}
+.insight small{color:var(--muted);font-weight:700;font-size:12px;display:block}
+.insight b{font-size:15px;display:block;margin-top:2px}
+.item,.acct{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:24px;background:#fff;margin-bottom:10px;box-shadow:0 6px 16px rgba(244,143,177,.12);cursor:pointer}
+.acct{box-shadow:0 6px 16px rgba(169,139,240,.12)}
+.item.pending{opacity:.7;border:2px dashed #f3c6dc}
+.goal,.bill{background:#fff;border-radius:22px;padding:14px;margin-bottom:10px;box-shadow:0 6px 16px rgba(169,139,240,.12)}
+.ico-circle{width:46px;height:46px;border-radius:18px;display:grid;place-items:center;font-size:22px;flex:0 0 auto}
+.ico-circle.in{background:#c9f5e4}.ico-circle.out{background:#ffd9e8}.ico-circle.dom{background:#ffdcc7}.ico-circle.sek{background:#dccbff}
+.grow{flex:1;min-width:0}
+.name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subline{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.amount{font-weight:700;white-space:nowrap;font-size:15px}
+.amount.in{color:var(--mint-d)}.amount.out{color:#e0588a}
+.up{color:#e0588a;font-weight:700}.down{color:var(--mint-d);font-weight:700}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dccbff;color:#5b3fb0;margin-left:6px;vertical-align:middle}
+.date-head{display:inline-block;background:#fff;border:2px solid var(--line);border-radius:999px;padding:5px 14px;font-size:12px;color:var(--muted);font-weight:700;margin:16px 0 10px}
+.filter-grid,.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.empty{text-align:center;padding:30px 16px;color:var(--muted)}
+.empty .ico{font-size:50px;margin-bottom:6px;animation:float 3s ease-in-out infinite}
+.empty b{display:block;color:var(--plum);font-size:16px;margin-bottom:4px}
+.chart-box{position:relative;height:250px}
+.tbl-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px dashed #f1e4ef;font-size:14px}
+.tbl-row .grow{font-weight:700}
+.tbl-row .num{white-space:nowrap;text-align:right;min-width:52px}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.alert-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #f1e4ef;font-size:14px}
+.alert-row:last-child{border-bottom:0}
+.warn-line{padding:10px 12px;border-radius:16px;background:#fff7e6;color:#a16207;font-size:13px;margin-bottom:8px}
+.bar-line{font-size:12px;font-weight:700;margin-top:6px}
+.budget-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-bottom:12px}
+.budget-form select{grid-column:1/3}
+.budget-form .btn{grid-column:3;width:auto}
+.budget-item{background:#fff;border-radius:20px;padding:12px 14px;margin-bottom:10px;box-shadow:0 6px 14px rgba(0,0,0,.03);cursor:pointer}
+.status-line{font-size:12px;font-weight:700;margin-top:6px}
+.stock{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:20px;background:#fff;margin-bottom:8px;box-shadow:0 6px 14px rgba(0,0,0,.03)}
+.bottom-nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:grid;grid-template-columns:1fr 1fr 74px 1fr 1fr;align-items:center;padding:8px;background:rgba(255,255,255,.95);border-radius:32px;box-shadow:0 14px 34px rgba(169,139,240,.25);border:2px solid #fff;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.bottom-nav button{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11px;font-weight:700;color:var(--muted);padding:8px 0;border-radius:22px;transition:.2s}
+.bottom-nav button span:first-child{font-size:20px}
+.bottom-nav button.active{background:#ffeef6;color:#b05c8a}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:50%;background:var(--grad);color:#fff;font-size:34px;line-height:1;border:4px solid #fff;box-shadow:0 12px 26px rgba(196,181,253,.7);z-index:31;transition:transform .2s;padding-bottom:4px}
+.fab:active{transform:translateX(-50%) scale(.9) rotate(45deg)}
+.overlay{position:fixed;inset:0;z-index:55;background:rgba(91,74,110,.25);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;max-height:92vh;overflow:auto;background:#fffafd;border-radius:34px 34px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(169,139,240,.25);animation:slideUp .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.grip{width:48px;height:5px;border-radius:5px;background:#eadbe6;margin:0 auto 10px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center}
+.sheet-head h3{font-size:19px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px;margin-top:12px}
+.seg button{padding:12px;border-radius:999px;color:var(--muted);font-weight:700;transition:.25s}
+.seg button.active{color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.08)}
+.seg button.active[data-type="INCOME"]{background:linear-gradient(135deg,#8fe3c5,#5fcaa0)}
+.seg button.active[data-type="EXPENSE"]{background:linear-gradient(135deg,#ffb3cf,#f06fa0)}
+.amount-wrap{position:relative}
+.amount-wrap span{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--muted)}
+.amount-wrap input{padding-left:52px;font-size:26px;font-weight:700}
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(91,74,110,.35);padding:24px}
+.modal .box{background:#fff;border-radius:30px;padding:24px;max-width:340px;width:100%;text-align:center}
+.modal .ico{font-size:44px}
+.toast{position:fixed;left:50%;bottom:calc(112px + env(safe-area-inset-bottom));transform:translate(-50%,16px);opacity:0;background:var(--plum);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;max-width:90%;text-align:center;transition:.3s;z-index:80;pointer-events:none;box-shadow:0 10px 24px rgba(91,74,110,.3)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:#d9477a}
+.progress{position:fixed;top:0;left:0;height:4px;width:0;background:var(--grad);z-index:90;border-radius:0 4px 4px 0}
+.sparkle{position:fixed;left:50%;bottom:150px;font-size:20px;pointer-events:none;z-index:95;animation:fly 1.3s ease-out forwards}
+@keyframes fly{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--x),-240px) rotate(var(--r)) scale(1.1);opacity:0}}
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important;color:#000;padding:12px}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px}
+  #printArea th,#printArea td{border-bottom:1px solid #ddd;padding:5px;text-align:left}
+}
+</style>
+</head>
+<body>
+<div id="progress" class="progress"></div>
+
+<!-- First-time setup -->
+<section id="setupScreen" class="screen hidden">
+  <div class="card setup-card">
+    <div class="logo">🌸</div>
+    <h2 class="center" style="font-size:24px;margin-top:6px">Welcome, bestie!</h2>
+    <p class="muted small center" style="margin-top:6px">Connect the app to your spreadsheet. You only need to do this once ✨</p>
+    <form id="setupForm">
+      <label for="setupUrl">🔗 Web App URL</label>
+      <input id="setupUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" required>
+      <label for="setupKey">🔑 Secret key</label>
+      <input id="setupKey" type="password" placeholder="Paste from Script Properties" required autocomplete="off">
+      <label for="setupPin">🎀 Create a 6-digit PIN</label>
+      <input id="setupPin" type="password" inputmode="numeric" maxlength="6" required autocomplete="new-password">
+      <label for="setupPin2">🎀 Repeat PIN</label>
+      <input id="setupPin2" type="password" inputmode="numeric" maxlength="6" required autocomplete="new-password">
+      <button class="btn" type="submit" id="btnSetup" style="margin-top:20px">Connect 💖</button>
+    </form>
+  </div>
+</section>
+
+<!-- PIN lock -->
+<section id="lockScreen" class="screen hidden">
+  <div class="logo">🔐</div>
+  <h2 style="font-size:24px;margin-top:6px">Enter your PIN 🎀</h2>
+  <div class="dots" id="dots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+  <div class="keypad" id="keypad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <span></span><button data-k="0">0</button><button data-k="del">⌫</button>
+  </div>
+  <button class="muted small" id="forgotPin" style="margin-top:24px;text-decoration:underline">Forgot PIN? Reset app</button>
+</section>
+
+<!-- Main app -->
+<main id="app" class="hidden">
+  <header class="topbar">
+    <div>
+      <div class="brand">🌸 Putri Finance</div>
+      <div id="status" class="status">Loading…</div>
+    </div>
+    <div class="top-actions">
+      <button id="btnLock" class="icon-btn" aria-label="Lock">🔒</button>
+      <button id="btnReset" class="icon-btn" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Home -->
+  <section id="tabHome" class="tab">
+    <div class="card hidden" id="billAlert"></div>
+    <div class="greet" id="greet">Hi bestie ✨</div>
+    <div class="sub" id="todayLabel"></div>
+    <div class="chips">
+      <button class="chip" data-period="today">Today</button>
+      <button class="chip" data-period="week">This week</button>
+      <button class="chip active" data-period="month">This month</button>
+      <button class="chip" data-period="custom">Custom</button>
+    </div>
+    <div class="custom-range hidden" data-custom>
+      <input type="date" class="kInput" data-k="from" aria-label="From date">
+      <input type="date" class="kInput" data-k="to" aria-label="To date">
+    </div>
+    <div class="balance-card">
+      <div class="lbl" id="labelPeriod">This month</div>
+      <div class="big" id="netAmount">Rp 0</div>
+      <span class="pill" id="compareBadge">🌷 Not enough data to compare yet</span>
+    </div>
+    <div class="tiles">
+      <div class="tile in"><div class="ico">💰</div><small>Income</small><b id="sumIncome">Rp 0</b></div>
+      <div class="tile out"><div class="ico">🛍️</div><small>Expenses</small><b id="sumExpense">Rp 0</b></div>
+    </div>
+    <div class="mini-row">
+      <div class="mini"><small>Savings rate</small><b id="statSavings">–</b></div>
+      <div class="mini"><small>Avg expense</small><b id="statAvg">Rp 0</b></div>
+      <div class="mini"><small>Entries</small><b id="statCount">0</b></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🍩 Where your money goes</div>
+      <div class="donut-wrap">
+        <canvas id="chartDonut"></canvas>
+        <div class="donut-center"><div><small>Total spent</small><b id="donutTotal">Rp 0</b></div></div>
+      </div>
+      <div id="catList" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✨ Insights</div>
+      <div id="insights"></div>
+    </div>
+    <div class="card-title plain">🧾 Latest entries</div>
+    <div id="latest"></div>
+  </section>
+
+  <!-- History -->
+  <section id="tabHistory" class="tab hidden">
+    <div class="card-title plain">📜 History</div>
+    <input id="search" type="search" placeholder="🔍 Search category, note, #tag, or amount">
+    <div class="filter-grid">
+      <select id="filterType" aria-label="Type">
+        <option value="">All types</option>
+     
