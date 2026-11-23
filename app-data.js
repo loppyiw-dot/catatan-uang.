@@ -259,14 +259,17 @@ async function loadAll() {
   }
 }
 
+let tradingFetchedAt = 0;
+
 async function loadTrading() {
   if (busyTrading) return;
   busyTrading = true;
+  tradingFetchedAt = Date.now();
   tradingError = '';
   try {
     const res = await api('getTrading');
     if (res.ok) { tradingDetail = res.data; saveCache(); }
-    else tradingError = 'Your server may still be on an older Code.gs version. Update it to version 7 (Deploy → Manage deployments → New version).';
+    else tradingError = res.pesan || 'Could not load trading data.';
   } catch (err) {
     tradingError = isOffline(err) ? 'Trading needs a connection to load.' : errText(err);
   } finally {
