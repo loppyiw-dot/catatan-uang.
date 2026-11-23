@@ -19,9 +19,9 @@ let editingSav = null;
 /* ---------- Load from server ---------- */
 async function loadSavings() {
   try {
-    const [a, r] = await Promise.all([api('getSavingAccounts'), api('getSavings')]);
+    const [a, r, p] = await Promise.all([api('getSavingAccounts'), api('getSavings'), api('getSavingPlans')]);
     if (a.ok && r.ok) {
-      savingsData = { accounts: a.data, records: r.data };
+      savingsData = { accounts: a.data, records: r.data, plans: p.ok ? p.data : (savingsData.plans || []) };
       writeJSON(KEY_SAV, savingsData);
     }
   } catch (err) {
@@ -437,16 +437,10 @@ $('#btnSavCsv').addEventListener('click', savCsv);
 $('#btnSavPdf').addEventListener('click', savPdf);
 
 /* ===================== MONTHLY SAVINGS PLANS =====================
-   Stored on this phone (like Bills). "Save now" writes a Save
-   record to the Savings tab, so the balance and history update. */
-const KEY_SAV_PLANS = 'putriFinance.savPlans';
-let savPlans = readJSON(KEY_SAV_PLANS, []);
+   Stored in the "Savings Plans" tab of the spreadsheet.
+   "Save now" writes a Save record and marks the plan as paid this month. */
+const savPlanList = () => savingsData.plans || [];
 let editingSavPlan = null;
-
-function savPlansWrite(list) {
-  savPlans = list;
-  writeJSON(KEY_SAV_PLANS, list);
-}
 
 function savPlanStatus(p) {
   const now = new Date();
@@ -461,11 +455,12 @@ function savPlanStatus(p) {
 function renderSavPlans() {
   const wrap = $('#savPlanList');
   if (!wrap) return;
-  if (!savPlans.length) {
+  const list = savPlanList();
+  if (!list.length) {
     wrap.innerHTML = emptyHTML('No monthly plans yet', 'Add one for each account you save into every month.');
     return;
   }
-  wrap.innerHTML = savPlans.map((p) => {
+  wrap.innerHTML = list.map((p) => {
     const s = savPlanStatus(p);
     let st;
     if (s.paid) st = '✅ Saved this month';
@@ -498,7 +493,7 @@ function openPlanSheet(p) {
   openSheet('#planSheet');
 }
 
-function savePlan(e) {
+async function savePlan(e) {
   e.preventDefault();
   const d = {
     akun: $('#planAccount').value,
@@ -513,39 +508,38 @@ function savePlan(e) {
   const acc = findAcc(d.akun);
   if (acc && !acc.bersama) d.kontributor = 'Me';
 
-  const list = savPlans.slice();
+  let ok;
   if (editingSavPlan) {
-    const p = list.find((x) => x.id === editingSavPlan.id);
-    if (p) Object.assign(p, d);
+    ok = await sendWrite('ubahSavingPlan', { id: editingSavPlan.id, data: d }, 'Plan updated 🔁');
   } else {
-    list.push({ id: newId(), ...d, paidMonth: '' });
+    d.id = newId();
+    ok = await sendWrite('tambahSavingPlan', { data: d }, 'Plan saved 🔁');
   }
-  savPlansWrite(list);
-  closeSheets();
-  renderSavings();
-  toast('Monthly plan saved 🔁');
+  if (ok) { closeSheets(); await loadAll(); }
 }
 
-function deleteSavPlan() {
+async function deleteSavPlan() {
   if (!editingSavPlan) return;
-  savPlansWrite(savPlans.filter((x) => x.id !== editingSavPlan.id));
-  closeSheets();
-  renderSavings();
-  toast('Plan deleted 🫧');
+  const yes = await ask('Delete this plan?', `${editingSavPlan.akun} · ${rp(editingSavPlan.amount)} per month`, 'Delete');
+  if (!yes) return;
+  const ok = await sendWrite('hapusSavingPlan', { id: editingSavPlan.id }, 'Plan deleted 🫧');
+  if (ok) { closeSheets(); await loadAll(); }
 }
 
 async function savePlanNow(id) {
-  const p = savPlans.find((x) => x.id === id);
+  const p = savPlanList().find((x) => x.id === id);
   if (!p) return;
   const today = ymd(new Date());
-  const data = {
+  const rec = {
     tipe: 'SAVE', tanggal: today, akun: p.akun, kontributor: p.kontributor,
     nominal: p.amount, dompet: p.dompet, kategori: '', catatan: 'Monthly plan', id: newId()
   };
-  const ok = await sendWrite('tambahSaving', { data }, `${p.akun} saved 💖`);
+  const ok = await sendWrite('tambahSaving', { data: rec }, `${p.akun} saved 💖`);
   if (!ok) return;
-  p.paidMonth = today.slice(0, 7);
-  savPlansWrite(savPlans);
+  await sendWrite('ubahSavingPlan', {
+    id: p.id,
+    data: { akun: p.akun, kontributor: p.kontributor, amount: p.amount, day: p.day, dompet: p.dompet, paidDate: today }
+  }, 'Marked as saved this month');
   confetti();
   await loadAll();
 }
@@ -554,7 +548,7 @@ document.addEventListener('click', (e) => {
   const sv = e.target.closest('[data-plan-save]');
   if (sv) { savePlanNow(sv.dataset.planSave); return; }
   const ed = e.target.closest('[data-plan-edit]');
-  if (ed) { openPlanSheet(savPlans.find((x) => x.id === ed.dataset.planEdit)); return; }
+  if (ed) { openPlanSheet(savPlanList().find((x) => x.id === ed.dataset.planEdit)); return; }
   if (e.target.closest('#btnNewPlan')) openPlanSheet(null);
 });
 
