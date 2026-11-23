@@ -342,34 +342,81 @@ function renderTrading() {
     $('#retryTrading').onclick = () => { tradingError = ''; renderTrading(); };
     return;
   }
+  // Refresh in the background, at most every 30 seconds
+  if (!busyTrading && Date.now() - tradingFetchedAt > 30000) loadTrading();
+
   const s = tradingDetail.ringkasan;
-  const games = s.jumlahUntung + s.jumlahRugi;
-  const rate = games ? Math.round(s.jumlahUntung / games * 100) : null;
+  const prices = tradingDetail.prices || {};
+  const sign = (n) => (n >= 0 ? '+' : '−');
+  const cls = (n) => (n >= 0 ? 'down' : 'up');
+  const pctTxt = (p) => (p === null ? '–' : `${sign(p)} ${Math.abs(p).toFixed(1)}%`);
+
+  const rows = (tradingDetail.saham || []).filter((x) => x.lotSisa > 0).map((x) => {
+    const fromSheet = x.nilaiSheet !== null && x.nilaiSheet !== undefined;
+    const pr = prices[x.kode];
+    const manual = pr ? pr.harga : null;
+    const value = fromSheet ? x.nilaiSheet : (manual ? x.lotSisa * 100 * manual : null);
+    const pl = value === null ? null : value - x.modalSisa;
+    const pct = pl === null || !x.modalSisa ? null : pl / x.modalSisa * 100;
+    return { ...x, fromSheet, manual, value, pl, pct, updated: pr ? pr.tanggal : '' };
+  });
+
+  const invested = rows.reduce((a, r) => a + r.modalSisa, 0);
+  const priced = rows.filter((r) => r.pl !== null);
+  const floating = priced.reduce((a, r) => a + r.pl, 0);
+  const investedPriced = priced.reduce((a, r) => a + r.modalSisa, 0);
+  const floatingPct = investedPriced ? floating / investedPriced * 100 : null;
+  const totalPL = s.realisasi + floating;
+
+  const cards = rows.map((r) => `<div class="bill">
+      <div class="bar-top">
+        <span>${esc(r.kode)} · ${r.lotSisa} lot</span>
+        <span class="${r.pl === null ? '' : cls(r.pl)}">${r.pl === null ? '–' : sign(r.pl) + ' ' + rp(Math.abs(r.pl))}</span>
+      </div>
+      <div class="subline" style="white-space:normal;margin-top:6px">
+        Invested ${rp(r.modalSisa)}${r.value === null ? '' : ' · Value ' + rp(r.value)}${r.pct === null ? '' : ' · ' + pctTxt(r.pct)}
+      </div>
+      ${r.fromSheet
+        ? '<div class="muted small" style="margin-top:6px">Value from Harga Real Time in your Log sheet</div>'
+        : `<div class="row-btns" style="align-items:center">
+            <input type="text" inputmode="numeric" data-price-input="${esc(r.kode)}" placeholder="Price per share"
+              value="${r.manual ? Number(r.manual).toLocaleString('id-ID') : ''}" style="max-width:160px;padding:9px 12px">
+            <button class="btn sm" data-price-save="${esc(r.kode)}">Save</button>
+            ${r.updated ? `<span class="muted small">as of ${esc(fmtShort(fromYmd(r.updated)))}</span>` : ''}
+          </div>`}
+    </div>`).join('');
+
   const warnings = (tradingDetail.peringatan || []).map((p) => `<div class="warn-line">⚠️ ${esc(p)}</div>`).join('');
-  const stocks = (tradingDetail.saham || []).filter((x) => x.lotSisa > 0).map((x) => {
-    const holding = x.lotSisa > 0 ? `${x.lotSisa} lot holding · ${rp(x.modalSisa)} in stock` : 'Closed position';
-    return `<div class="stock">
-      <div class="grow"><div class="name">${esc(x.kode)}</div><div class="subline">${esc(holding)}</div></div>
-      <div class="amount ${x.realisasi >= 0 ? 'in' : 'out'}">${x.realisasi >= 0 ? '+' : '−'} ${rp(Math.abs(x.realisasi))}</div>
-    </div>`;
-  }).join('');
+
   box.innerHTML = `
-    <div class="mini-row">
-      <div class="mini"><small>Realized P/L</small><b class="${s.realisasi >= 0 ? 'down' : 'up'}">${s.realisasi >= 0 ? '' : '−'}${rp(Math.abs(s.realisasi))}</b></div>
-      <div class="mini"><small>In stocks</small><b>${rp(s.modalTerbuka)}</b></div>
-      <div class="mini"><small>Win rate</small><b>${rate === null ? '–' : rate + '%'}</b></div>
+    <div class="balance-card">
+      <div class="lbl">Total profit / loss</div>
+      <div class="big ${totalPL < 0 ? 'neg' : ''}">${sign(totalPL)} ${rp(Math.abs(totalPL))}</div>
+      <span class="pill">${priced.length ? pctTxt(floatingPct) + ' on open positions' : 'Enter last prices below'}</span>
     </div>
-    <div class="mini-row two" style="margin-bottom:16px">
-      <div class="mini"><small>Winning sells</small><b class="down">${s.jumlahUntung}</b></div>
-      <div class="mini"><small>Losing sells</small><b class="up">${s.jumlahRugi}</b></div>
+    <div class="mini-row">
+      <div class="mini"><small>Invested now</small><b>${rp(invested)}</b></div>
+      <div class="mini"><small>Floating P/L</small><b class="${priced.length ? cls(floating) : ''}">${priced.length ? sign(floating) + ' ' + rp(Math.abs(floating)) : '–'}</b></div>
+      <div class="mini"><small>Realized P/L</small><b class="${cls(s.realisasi)}">${sign(s.realisasi)} ${rp(Math.abs(s.realisasi))}</b></div>
     </div>
     ${warnings ? `<div class="card">${warnings}</div>` : ''}
     <div class="card">
-      <div class="card-title">📈 Stocks</div>
-      ${stocks || emptyHTML('No open positions', 'Stocks you still hold will show here.')}
-      <p class="note">Profit and loss shown is realized, from sells. Unrealized value needs live prices, which this app does not fetch.</p>
+      <div class="card-title">📈 Holdings</div>
+      ${cards || emptyHTML('No open positions', 'Rows with Status HOLD in your Log sheet will show here.')}
+      <p class="note">Holdings are the Beli rows with Status HOLD in Log Transaksi. Realized P/L comes from your sells.</p>
     </div>`;
 }
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-price-save]');
+  if (!btn) return;
+  const kode = btn.dataset.priceSave;
+  const input = document.querySelector(`[data-price-input="${kode}"]`);
+  const harga = parseRupiah(input ? input.value : '');
+  if (!(harga > 0)) return toast('Enter the last price first', 'bad');
+  const ok = await sendWrite('setTradingPrice', { data: { kode, harga } }, `${kode} price saved 💖`);
+  if (ok) await loadTrading();
+});
 
 function goalHTML(g, avg) {
   const pct = Math.min(100, g.target ? g.saved / g.target * 100 : 0);
