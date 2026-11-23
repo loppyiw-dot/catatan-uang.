@@ -1,5 +1,5 @@
-const CACHE = 'putri-finance-v2';
-const ASET = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'putri-finance-v4';
+const ASET = ['./', './index.html', './manifest.json', './icon-pastel-192.png', './icon-pastel-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
