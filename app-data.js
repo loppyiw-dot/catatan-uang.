@@ -15,7 +15,7 @@ const WEEKDAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const WEEKDAY_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const WEEK_ORDER = [1,2,3,4,5,6,0];
 const PERIOD_LABEL = { today: 'Today', week: 'This week', month: 'This month', custom: 'Custom range' };
-const SHEET_IDS = ['#txSheet','#balSheet','#goalSheet','#fundSheet','#billSheet'];
+const SHEET_IDS = ['#txSheet','#balSheet','#goalSheet','#fundSheet','#billSheet','#savSheet','#accSheet','#planSheet'];
 const SERVER_MSG = {
   'Kunci tidak valid': 'Invalid key',
   'Data sudah berubah. Muat ulang daftar lalu coba lagi.': 'Data changed. Reload and try again.',
@@ -246,6 +246,7 @@ async function loadAll() {
     txs = t.data;
     if (w && w.ok) wallets = w.data;
     if (t2 && t2.ok) trades = t2.data;
+    await loadSavings();
     saveCache();
     setStatus('Synced ✨');
   } catch (err) {
@@ -281,7 +282,7 @@ function allTx() {
       catatan: d.catatan || '', dompet: d.dompet, pending: true, baris: 1e9 };
   });
   return [...pending, ...txs]
-    .filter((t) => t.tanggal)
+    .filter((t) => t.tanggal && t.kategori && t.nominal > 0)
     .sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.baris - a.baris);
 }
 
@@ -401,6 +402,7 @@ function balanceOf(a) {
       if (x.jenis === 'WITHDRAW' || x.jenis === 'BELI') total -= x.total;
     }
   });
+  total += savingsWalletDelta(a, acuan);
   return total;
 }
 

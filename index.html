@@ -191,6 +191,7 @@
     <div class="chips">
       <button class="chip active" data-money="wallets">👛 Wallets</button>
       <button class="chip" data-money="trading">📈 Trading</button>
+      <button class="chip" data-money="savings">🐷 Savings</button>
       <button class="chip" data-money="plan">🎯 Plan</button>
       <button class="chip" data-money="wealth">👑 Wealth</button>
     </div>
@@ -223,6 +224,39 @@
       </div>
     </div>
 
+    <div id="money-savings" class="hidden">
+      <div class="balance-card">
+        <div class="lbl">Total saved</div>
+        <div class="big" id="savTotal">Rp 0</div>
+        <span class="pill" id="savSplit">👫 Shared Rp 0 · 👤 Personal Rp 0</span>
+      </div>
+      <div class="row-btns" style="margin:0 0 14px">
+        <button class="btn sm" data-sav-action="SAVE">+ Save</button>
+        <button class="btn sm ghost" data-sav-action="WITHDRAW">Withdraw</button>
+        <button class="btn sm ghost" data-sav-action="USE">🎉 Use</button>
+        <button class="btn sm ghost" data-sav-action="NEWACC">+ New account</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🔁 Monthly plans</div>
+        <div id="savPlanList"></div>
+        <div class="row-btns"><button class="btn sm ghost" id="btnNewPlan">+ New monthly plan</button></div>
+        <p class="note">Set how much to save each month for an account. Tap "Save now" once you have transferred it.</p>
+      </div>
+      <div class="card"><div class="card-title">🐷 Accounts</div><div id="savAccounts"></div></div>
+      <div class="card">
+        <div class="card-title">📈 Savings analysis</div>
+        <div class="chart-box"><canvas id="chartSavings"></canvas></div>
+        <div id="savAnalysis" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🧾 Recent records</div>
+        <div id="savRecent"></div>
+        <div class="row-btns">
+          <button class="btn sm ghost" id="btnSavCsv">⬇️ Download CSV</button>
+          <button class="btn sm ghost" id="btnSavPdf">🖨️ Save as PDF</button>
+        </div>
+      </div>
+    </div>
     <div id="money-wealth" class="hidden">
       <div class="card">
         <div class="card-title">👑 Cash over time</div>
@@ -347,6 +381,89 @@
   <button class="btn ghost hidden" id="billDelete" type="button" style="margin-top:10px">Delete bill</button>
 </form>
 
+<!-- Savings record -->
+<form id="savSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="savTitle">💰 Save to savings</h3>
+    <button type="button" id="savClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <div class="seg" id="savSeg">
+    <button type="button" data-sav-type="SAVE">💰 Save</button>
+    <button type="button" data-sav-type="WITHDRAW">↩️ Withdraw</button>
+    <button type="button" data-sav-type="USE">🎉 Use</button>
+  </div>
+  <label for="savAccount">Account</label>
+  <select id="savAccount"></select>
+  <div id="savContribRow">
+    <label for="savContrib">Contributor</label>
+    <select id="savContrib">
+      <option value="Me">Me</option>
+      <option value="Partner">Partner</option>
+    </select>
+  </div>
+  <label for="savAmount">Amount</label>
+  <div class="amount-wrap"><span>Rp</span><input id="savAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <div class="two-col">
+    <div><label for="savDate">Date</label><input id="savDate" type="date"></div>
+    <div id="savWalletRow"><label for="savWallet">Wallet</label><select id="savWallet"></select></div>
+  </div>
+  <div id="savCategoryRow"><label for="savCategory">Category</label><select id="savCategory"></select></div>
+  <label for="savNote">Note (optional)</label>
+  <input id="savNote" placeholder="e.g. wedding deposit" maxlength="120" autocomplete="off">
+  <p class="note" id="savHint"></p>
+  <button class="btn" id="savSave" type="submit" style="margin-top:16px">Save 💖</button>
+  <button class="btn ghost hidden" id="savDelete" type="button" style="margin-top:10px">Delete record</button>
+</form>
+
+<!-- New savings account -->
+<form id="accSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3>🐷 New savings account</h3>
+    <button type="button" id="accClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="accName">Account name</label>
+  <input id="accName" placeholder="e.g. Holiday" maxlength="40" autocomplete="off">
+  <label for="accIcon">Icon</label>
+  <select id="accIcon"></select>
+  <label>Type</label>
+  <div class="seg" id="accSeg">
+    <button type="button" data-shared="NO">👤 Personal</button>
+    <button type="button" data-shared="YES">👫 Shared</button>
+  </div>
+  <input type="hidden" id="accShared" value="NO">
+  <label for="accTarget">Target (optional)</label>
+  <div class="amount-wrap"><span>Rp</span><input id="accTarget" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <label for="accDeadline">Deadline (optional)</label>
+  <input id="accDeadline" type="date">
+  <button class="btn" type="submit" style="margin-top:18px">Create account ✨</button>
+</form>
+
+<!-- Monthly savings plan -->
+<form id="planSheet" class="sheet hidden" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="planTitle">🔁 New monthly plan</h3>
+    <button type="button" id="planClose" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <label for="planAccount">Account</label>
+  <select id="planAccount"></select>
+  <label for="planContrib">Contributor</label>
+  <select id="planContrib">
+    <option value="Me">Me</option>
+    <option value="Partner">Partner</option>
+  </select>
+  <label for="planAmount">Amount per month</label>
+  <div class="amount-wrap"><span>Rp</span><input id="planAmount" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+  <div class="two-col">
+    <div><label for="planDay">Day of month</label><select id="planDay"></select></div>
+    <div><label for="planWallet">From wallet</label><select id="planWallet"></select></div>
+  </div>
+  <button class="btn" type="submit" style="margin-top:18px">Save plan ✨</button>
+  <button class="btn ghost hidden" id="planDelete" type="button" style="margin-top:10px">Delete plan</button>
+</form>
+
 <!-- Confirm -->
 <div id="modal" class="modal hidden">
   <div class="box">
@@ -367,5 +484,6 @@
 <script src="app-ui.js"></script>
 <script src="app-forms.js"></script>
 <script src="app-events.js"></script>
+<script src="app-savings.js"></script>
 </body>
 </html>

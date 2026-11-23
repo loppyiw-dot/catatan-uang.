@@ -59,7 +59,7 @@ function renderHome() {
   const prevList = allTx().filter((t) => inRange(t, prevRange(r, period)));
   const m = calc(list), pm = calc(prevList);
 
-  $('#labelPeriod').textContent = `${PERIOD_LABEL[period]} · ${fmtRange(r)}`;
+  $('#labelPeriod').textContent = `Left ${PERIOD_LABEL[period].toLowerCase()} · ${fmtRange(r)}`;
   const net = $('#netAmount');
   animateNumber(net, m.net);
   net.classList.toggle('neg', m.net < 0);
@@ -294,11 +294,12 @@ function renderBudgets() {
 }
 
 function renderMoney() {
-  const tabs = ['wallets', 'trading', 'plan', 'wealth'];
+  const tabs = ['wallets', 'trading', 'savings', 'plan', 'wealth'];
   tabs.forEach((k) => $('#money-' + k).classList.toggle('hidden', moneyTab !== k));
   $$('[data-money]').forEach((c) => c.classList.toggle('active', c.dataset.money === moneyTab));
   if (moneyTab === 'wallets') renderWallets();
   else if (moneyTab === 'trading') renderTrading();
+  else if (moneyTab === 'savings') renderSavings();
   else if (moneyTab === 'plan') renderPlan();
   else renderWealth();
 }
@@ -345,7 +346,7 @@ function renderTrading() {
   const games = s.jumlahUntung + s.jumlahRugi;
   const rate = games ? Math.round(s.jumlahUntung / games * 100) : null;
   const warnings = (tradingDetail.peringatan || []).map((p) => `<div class="warn-line">⚠️ ${esc(p)}</div>`).join('');
-  const stocks = (tradingDetail.saham || []).map((x) => {
+  const stocks = (tradingDetail.saham || []).filter((x) => x.lotSisa > 0).map((x) => {
     const holding = x.lotSisa > 0 ? `${x.lotSisa} lot holding · ${rp(x.modalSisa)} in stock` : 'Closed position';
     return `<div class="stock">
       <div class="grow"><div class="name">${esc(x.kode)}</div><div class="subline">${esc(holding)}</div></div>
@@ -365,7 +366,7 @@ function renderTrading() {
     ${warnings ? `<div class="card">${warnings}</div>` : ''}
     <div class="card">
       <div class="card-title">📈 Stocks</div>
-      ${stocks || emptyHTML('No trades yet', 'Buy and sell rows in the Log Transaksi sheet will show here.')}
+      ${stocks || emptyHTML('No open positions', 'Stocks you still hold will show here.')}
       <p class="note">Profit and loss shown is realized, from sells. Unrealized value needs live prices, which this app does not fetch.</p>
     </div>`;
 }
